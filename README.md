@@ -4,11 +4,7 @@ Generator and solver algorithm repertoire for the Japanese logic puzzle Hashiwok
 
 > [!NOTE]
 > Versión modificada por Lautaro de Vega, para el proyecto original dirigirse al
-> repositorio de [erthium](https://github.com/erthium/hashiwokakero). Añadí el
-> argumento --fancy al comando book para producir un resultado más similar al de
-> un libro de puzzles, añadiendo una portada y una separación por dificultad.
-> Además hice algunos ajustes de espaciados para mayor placer visual.
-
+> repositorio de [erthium](https://github.com/erthium/hashiwokakero). Para más información sobre el fork dirigirse a la sección ["Cambios del fork"](#cambios-del-fork).
 
 ## License
 
@@ -125,3 +121,9 @@ tests/
 
 The `output/` directory is gitignored and is where runtime artifacts go
 (`output/puzzles/`, `output/images/`, `output/database/`, `output/pdfs/`).
+
+## Cambios del fork
+
+Añadí el argumento `--fancy` al comando `book` para producir un resultado más similar al de un libro de puzzles, añadiendo una portada y una separación por dificultad. Además hice algunos ajustes de espaciados para mayor placer visual. Ejemplo de como se ve un PDF compilado con la opción --fancy:
+
+<img width="637" height="888" alt="Ejemplo de como se ve un PDF compilado con la opción --fancy." src="https://github.com/user-attachments/assets/fff04a5b-e354-4911-9cfc-1335f3ff5b1a" />
