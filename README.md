@@ -2,6 +2,13 @@
 
 Generator and solver algorithm repertoire for the Japanese logic puzzle Hashiwokakero - aka Hashi - created by Nikoli.
 
+> [!NOTE]
+> Versión modificada por Lautaro de Vega, para el proyecto original dirigirse al
+> repositorio de [erthium](https://github.com/erthium/hashiwokakero). Añadí el
+> argumento --fancy al comando book para producir un resultado más similar al de
+> un libro de puzzles, añadiendo una portada y una separación por dificultad.
+> Además hice algunos ajustes de espaciados para mayor placer visual.
+
 
 ## License
 
