@@ -28,21 +28,26 @@ from hashi.core import Node
 from hashi.formats import import_empty_grid, import_solution_grid
 from hashi.render import draw_grid_on_axis
 
+# Fuente monoespaciada
+plt.rcParams['font.family'] = 'monospace'
+plt.rcParams['font.monospace'] = ['MesloLGM Nerd Font']
 
 # A4 portrait in inches; matplotlib's native unit.
 PAGE_WIDTH_IN = 8.27
 PAGE_HEIGHT_IN = 11.69
 
 # Reserve space for a small header above each grid.
-HEADER_BAND_IN = 0.5
+HEADER_BAND_IN = 1.2
 # Gap between two stacked 10x10 puzzles on the same page.
-INNER_GAP_IN = 0.3
+INNER_GAP_IN = 0.5
 # Side margins.
 SIDE_MARGIN_IN = 1.0
 
 # Bucket → directory name on disk and ID prefix in the book.
 BUCKET_DIRS = ("easy", "intermediate", "hard")
-BUCKET_PREFIXES = {"easy": "E", "intermediate": "I", "hard": "H"}
+BUCKET_PREFIXES = {"easy": "F", "intermediate": "I", "hard": "D"}
+# Traducción de las dificultades
+BUCKET_TRANS = {"easy": "Fácil", "intermediate": "Intermedio", "hard": "Difícil"}
 
 # Bucket ordering for the produced book.
 BUCKET_ORDER = ("easy", "intermediate", "hard")
@@ -138,7 +143,7 @@ def _pack_pages(puzzles: list[_Puzzle]) -> list[list[_Puzzle]]:
             i += 1
         elif p.geometry == (10, 10):
             page = [p]
-            if i + 1 < len(puzzles) and puzzles[i + 1].geometry == (10, 10):
+            if i + 1 < len(puzzles) and puzzles[i + 1].geometry == (10, 10) and puzzles[i + 1].bucket == p.bucket:
                 page.append(puzzles[i + 1])
                 i += 2
             else:
@@ -213,19 +218,23 @@ def _render_page(page_puzzles: list[_Puzzle], *, solution: bool) -> plt.Figure:
     """
     fig = plt.figure(figsize=(PAGE_WIDTH_IN, PAGE_HEIGHT_IN))
 
-    if len(page_puzzles) == 1 and page_puzzles[0].geometry == (10, 20):
+    fig.text(0.5, 1 - HEADER_BAND_IN / (2 * PAGE_HEIGHT_IN), 
+             BUCKET_TRANS[page_puzzles[0].bucket], ha="center", va="center",
+             fontsize=14, fontweight="bold")
+    if len(page_puzzles) == 1:
         p = page_puzzles[0]
         ax = _puzzle_axes_for_full_page(fig)
         grid = p.solution_grid if solution else p.empty_grid
         draw_grid_on_axis(grid, ax)
+        # Header above each subgrid.
+        bbox = ax.get_position()
+        text_y = bbox.y1 + 0.01
         header = f"{p.book_id}  ·  {p.geometry[0]}×{p.geometry[1]}"
         if solution:
-            header += f"  ·  {p.bucket}  ·  score {p.score:.3f}"
-        fig.text(0.5, 1 - HEADER_BAND_IN / (2 * PAGE_HEIGHT_IN), header,
-                 ha="center", va="center", fontsize=14)
-
+            header += f"  ·  score {p.score:.3f}"
+        fig.text(0.5, text_y, header, ha="center", va="center", fontsize=12)
     else:
-        # Two stacked 10x10s (or a single 10x10 alone on its page).
+        # Two stacked 10x10s
         ax_upper, ax_lower = _puzzle_axes_for_two_stacked(fig)
         for ax, puzzle in zip((ax_upper, ax_lower), page_puzzles):
             grid = puzzle.solution_grid if solution else puzzle.empty_grid
@@ -235,7 +244,7 @@ def _render_page(page_puzzles: list[_Puzzle], *, solution: bool) -> plt.Figure:
             text_y = bbox.y1 + 0.01
             label = f"{puzzle.book_id}  ·  {puzzle.geometry[0]}×{puzzle.geometry[1]}"
             if solution:
-                label += f"  ·  {puzzle.bucket}  ·  score {puzzle.score:.3f}"
+                label += f"  ·  score {puzzle.score:.3f}"
             fig.text(0.5, text_y, label, ha="center", va="bottom", fontsize=12)
 
     return fig
@@ -244,11 +253,12 @@ def _render_page(page_puzzles: list[_Puzzle], *, solution: bool) -> plt.Figure:
 def _render_section_divider(title: str) -> plt.Figure:
     """A simple section divider page used between puzzles and solutions."""
     fig = plt.figure(figsize=(PAGE_WIDTH_IN, PAGE_HEIGHT_IN))
-    fig.text(0.5, 0.5, title, ha="center", va="center", fontsize=36)
+    fig.text(0.5, 0.5, title, ha="center", va="center", fontsize=36,
+             fontweight="bold")
     return fig
 
 
-def assemble_book(input_dir: str, output_path: str) -> None:
+def assemble_book(input_dir: str, output_path: str, fancy: bool) -> None:
     """
     Builds the PDF: puzzle pages in bucket-then-score order, a "Solutions"
     divider, then the same puzzles' solution pages in the same order.
@@ -269,12 +279,28 @@ def assemble_book(input_dir: str, output_path: str) -> None:
     )
 
     with PdfPages(output_path) as pdf:
+        if fancy == True:
+            fig = plt.figure(figsize=(PAGE_WIDTH_IN, PAGE_HEIGHT_IN))
+            fig.text(0.5, 0.55, "HASHIWOKAKERO", ha="center", va="center",
+                    fontsize=36, fontweight="bold")
+            fig.text(0.5, 0.50, f"{sum(counts.values())} puzzles", ha="center",
+                     va="center", fontsize=24)
+            pdf.savefig(fig)
+            plt.close(fig)
+
+        dificultad = ""
         for i, page in enumerate(pages, start=1):
+            # Agregar título indicando la dificultad de los puzzles siguientes
+            if fancy == True and dificultad != page[0].bucket:
+                dificultad = page[0].bucket
+                fig = _render_section_divider(BUCKET_TRANS[dificultad])
+                pdf.savefig(fig)
+                plt.close(fig)
             fig = _render_page(page, solution=False)
             pdf.savefig(fig)
             plt.close(fig)
         # Solutions section.
-        fig = _render_section_divider("Solutions")
+        fig = _render_section_divider("Soluciones")
         pdf.savefig(fig)
         plt.close(fig)
         for page in pages:

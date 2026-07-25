@@ -181,6 +181,12 @@ def _add_book(sub: argparse._SubParsersAction) -> None:
         required=True,
         help="path to write the PDF",
     )
+    p.add_argument(
+        "--fancy",
+        required=False,
+        action="store_true",
+        help="añadir portada y separadores entre dificultades"
+    )
     p.set_defaults(func=_cmd_book)
 
 
@@ -191,7 +197,7 @@ def _cmd_book(args: argparse.Namespace) -> int:
         print(f"ERROR: {args.input_dir} is not a directory", file=sys.stderr)
         return 2
     try:
-        assemble_book(args.input_dir, args.output)
+        assemble_book(args.input_dir, args.output, args.fancy)
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
